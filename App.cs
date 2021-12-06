@@ -38,14 +38,25 @@ namespace StereoKitApp
 		String Lx, Ly, Lz;
 		String Rx, Ry, Rz;
 		String Sx, Sy, Sz;
+		String dm, depth, subDiv;
 		Pose MeshSelectorWindowPose = new Pose(0f, 0f, 0f, Quat.Identity);
 
 		// Mesh Lists
 		List<Mesh> meshList = new List<Mesh>();
 		List<Pose> meshPoses = new List<Pose>();
 		List<string> meshHandles = new List<string>();
+		List<int> meshType = new List<int>();
 		int meshCount = 0;
 
+		// Types of meshes
+		enum MeshTypeIndex
+        {
+			Cube = 1,
+			Sphere = 2,
+			Cylinder = 3,
+			Plane = 4,
+        }
+		string[] meshNames = { "Cube", "Sphere", "Cylinder", "Plane" };
 		public void Init()
 		{
 			// Create assets used by the app
@@ -129,27 +140,51 @@ namespace StereoKitApp
 				UI.WindowBegin("Place", ref ObjectWindowPose, new Vector2(24, 0) * U.cm);
                 if (UI.Button("Cube"))
                 {
-					Mesh m = Mesh.GenerateCube(Vec3.One);
+					Mesh m = MeshGenerator((int)MeshTypeIndex.Cube, cubeSize: Vec3.One) ;
 					AddMesh(m);
+					meshType.Add((int)MeshTypeIndex.Cube);
 				}
                 if (UI.Button("Sphere"))
                 {
-					Mesh m = Mesh.GenerateSphere(1.0f);
+					Mesh m = MeshGenerator((int)MeshTypeIndex.Sphere, spDiameter: 1.0f);
 					AddMesh(m);
-                }
+					meshType.Add((int)MeshTypeIndex.Sphere);
+				}
                 if (UI.Button("Cylinder"))
                 {
-					Mesh m = Mesh.GenerateCylinder(1, 1, Vec3.Up);
+					Mesh m = MeshGenerator((int)MeshTypeIndex.Cylinder, cyDiameter: 1.0f, cyDepth: 1.0f);
 					AddMesh(m);
-                }
+					meshType.Add((int)MeshTypeIndex.Cylinder);
+				}
                 if (UI.Button("Plane"))
                 {
-					Mesh m = Mesh.GeneratePlane(Vec2.One);
+					Mesh m = MeshGenerator((int)MeshTypeIndex.Plane, plSize: Vec2.One);
 					AddMesh(m);
-                }
+					meshType.Add((int)MeshTypeIndex.Plane);
+				}
 				UI.WindowEnd();
 			}
         }//UIDisplay
+
+		Mesh MeshGenerator(int ch, Vec3 cubeSize = default(Vec3), float spDiameter = 1.0f, 
+			float cyDiameter = 1.0f, float cyDepth = 1.0f, Vec2 plSize = default(Vec2), int  cySubDiv = 16, int cuSubDiv = 0, int spSubDiv = 4, int plSubDiv = 0) {
+			Mesh m = new Mesh();
+			switch (ch) {
+				case (int)MeshTypeIndex.Cube:
+					m = Mesh.GenerateCube(cubeSize, subdivisions: cuSubDiv);
+					break;
+				case (int)MeshTypeIndex.Sphere:
+					m = Mesh.GenerateSphere(spDiameter, subdivisions: spSubDiv);
+					break;
+				case (int)MeshTypeIndex.Cylinder:
+					m = Mesh.GenerateCylinder(cyDiameter, cyDepth, Vec3.Up, subdivisions: cySubDiv);
+					break;
+				case (int)MeshTypeIndex.Plane:
+					m = Mesh.GeneratePlane(plSize, subdivisions: plSubDiv);
+					break;
+			}
+			return m;
+		}
 
 		void AddMesh(Mesh m)
         {
@@ -199,9 +234,16 @@ namespace StereoKitApp
 				Sx = val[6];
 				Sy = val[7];
 				Sz = val[8];
+
+				val = getMeshDetails();
+				dm = val[0];
+				depth = val[1];
+				subDiv = val[2];
 			}
 			meshValueChanged = false;
 			string[] values = { Lx, Ly, Lz, Rx, Ry, Rz, Sx, Sy, Sz };
+			string[] detailValues = { dm, depth, subDiv, Sx, Sy, Sz };
+
 			UI.WindowBegin("Mesh Manipulation", ref MeshSelectorWindowPose, new Vector2(50, 0) * U.cm);
 
 			UI.Label("Location: ");
@@ -234,17 +276,40 @@ namespace StereoKitApp
 
 			UI.Label("Scale: ");
 			UI.SameLine();
-			UI.Label("X=");
-			UI.SameLine();
-			if (UI.Input("Sx", ref Sx, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
-			UI.SameLine();
-			UI.Label("Y=");
-			UI.SameLine();
-			if (UI.Input("Sy", ref Sy, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
-			UI.SameLine();
-			UI.Label("Z=");
-			UI.SameLine();
-			if (UI.Input("Sz", ref Sz, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+
+            switch (meshType[selectedMeshIndex])
+            {
+				case (int)MeshTypeIndex.Cube:
+					UI.Label("X=");
+					UI.SameLine();
+					if (UI.Input("Sx", ref Sx, new Vec2(0.10f, 0f))) MeshScaleChanged(detailValues);
+					UI.SameLine();
+					UI.Label("Y=");
+					UI.SameLine();
+					if (UI.Input("Sy", ref Sy, new Vec2(0.10f, 0f))) MeshScaleChanged(detailValues);
+					UI.SameLine();
+					UI.Label("Z=");
+					UI.SameLine();
+					if (UI.Input("Sz", ref Sz, new Vec2(0.10f, 0f))) MeshScaleChanged(detailValues);
+					break;
+				case (int)MeshTypeIndex.Sphere:
+					UI.Label("Diameter=");
+					UI.SameLine();
+					if (UI.Input("Dm", ref dm, new Vec2(0.10f, 0f))) MeshScaleChanged(detailValues);
+					break;
+				case (int)MeshTypeIndex.Cylinder:
+					UI.Label("Diameter=");
+					UI.SameLine();
+					if (UI.Input("Dm", ref dm, new Vec2(0.10f, 0f))) MeshScaleChanged(detailValues);
+					break;
+				case (int)MeshTypeIndex.Plane:
+					UI.Label("X=");
+					UI.SameLine();
+					if (UI.Input("Sx", ref Sx, new Vec2(0.10f, 0f))) MeshScaleChanged(detailValues);
+					break;
+            }
+			
+			
 
             if (!moreOptions)
             {
@@ -327,12 +392,34 @@ namespace StereoKitApp
 			SetMeshTransform(val);
         }//MeshTransfromBeingEdited
 
+		void MeshScaleChanged(string[] val)
+        {
+            try
+            {
+				float diameter = float.Parse(val[0], CultureInfo.InvariantCulture.NumberFormat);
+				float depth = float.Parse(val[1], CultureInfo.InvariantCulture.NumberFormat);
+				int subDivisions = int.Parse(val[2], CultureInfo.InvariantCulture.NumberFormat);
+				float sx = float.Parse(val[3], CultureInfo.InvariantCulture.NumberFormat);
+				float sy = float.Parse(val[4], CultureInfo.InvariantCulture.NumberFormat);
+				float sz = float.Parse(val[5], CultureInfo.InvariantCulture.NumberFormat);
+
+				meshList[selectedMeshIndex] = MeshGenerator(meshType[selectedMeshIndex], cubeSize: new Vec3(sx, sy, sz), 
+					spDiameter: diameter, cyDiameter: diameter, cyDepth: depth, plSize: new Vec2(sx, sz), 
+					cySubDiv: subDivisions, cuSubDiv: subDivisions, spSubDiv: subDivisions, plSubDiv: subDivisions);
+			}
+            catch
+            {
+				// error thrown when the input fields are empty
+            }
+        }
+
 		void MeshDeleted()
         {
 			isMeshSelected = false;
 			meshList.RemoveAt(selectedMeshIndex);
 			meshHandles.RemoveAt(selectedMeshIndex);
 			meshPoses.RemoveAt(selectedMeshIndex);
+			meshType.RemoveAt(selectedMeshIndex);
 			meshCount--;
         }//MeshDeleted
 
@@ -340,6 +427,25 @@ namespace StereoKitApp
         {
 			meshHandles[selectedMeshIndex] = renameText;
 			renameMeshOption = false;
-        }
+        }//RenameMesh
+
+		void DuplicateMesh()
+        {
+			int type = meshType[selectedMeshIndex];
+			float diameter = meshList[selectedMeshIndex].Bounds.dimensions.x;
+			float depth = meshList[selectedMeshIndex].Bounds.dimensions.z;
+			int subDiv = meshList[selectedMeshIndex].GetVerts().Length / 4;
+			MeshGenerator(type, spDiameter: diameter, cyDiameter: diameter, cyDepth: depth, plSize: new Vec2(diameter, diameter), cySubDiv: subDiv, cuSubDiv: subDiv, spSubDiv: subDiv, plSubDiv: subDiv);
+        }//DuplicateMesh
+
+		string[] getMeshDetails()
+        {
+			int type = meshType[selectedMeshIndex];
+			string diameter = meshList[selectedMeshIndex].Bounds.dimensions.x.ToString();
+			string depth = meshList[selectedMeshIndex].Bounds.dimensions.z.ToString();
+			string subDiv = (meshList[selectedMeshIndex].GetVerts().Length / 4).ToString();
+			string[] arr = { diameter, depth, subDiv};
+			return arr;
+		}
 	}
 }
