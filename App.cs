@@ -26,8 +26,8 @@ namespace StereoKitApp
 		bool isPlaceOb = false;
 		bool isImportSc = false;
 		bool isExportSc = false;
-		// Place Menu
-		bool isPlaceMenu = false;
+		// Mesh Controller
+		bool meshSelected = false;
 
 		// Mesh Lists
 		List<Mesh> meshList = new List<Mesh>();
@@ -58,7 +58,10 @@ namespace StereoKitApp
 			UI.Handle("Cube", ref cubePose, cube.Bounds);
 			cube.Draw(cubePose.ToMatrix());
 
+			// Menu
 			UIDisplay();
+
+			// Meshes
 			RenderMeshes();
 			MeshUIs();
             
@@ -110,16 +113,36 @@ namespace StereoKitApp
                 if (UI.Button("Cube"))
                 {
 					Mesh m = Mesh.GenerateCube(Vec3.One*0.04f);
-					meshList.Add(m);
-					Pose mPose = new Pose(0, 0, -0.5f, Quat.Identity);
-					meshPoses.Add(mPose);
-					string mHandle = "Mesh" + meshCount.ToString();
-					meshHandles.Add(mHandle);
-					meshCount++;
+					AddMesh(m);
 				}
+                if (UI.Button("Sphere"))
+                {
+					Mesh m = Mesh.GenerateSphere(1.0f);
+					AddMesh(m);
+                }
+                if (UI.Button("Cylinder"))
+                {
+					Mesh m = Mesh.GenerateCylinder(1, 1, Vec3.Up);
+					AddMesh(m);
+                }
+                if (UI.Button("Plane"))
+                {
+					Mesh m = Mesh.GeneratePlane(Vec2.One);
+					AddMesh(m);
+                }
 				UI.WindowEnd();
 			}
         }//UIDisplay
+
+		void AddMesh(Mesh m)
+        {
+			meshList.Add(m);
+			Pose mPose = new Pose(0, 0, -0.5f, Quat.Identity);
+			meshPoses.Add(mPose);
+			string mHandle = "Mesh" + meshCount.ToString();
+			meshHandles.Add(mHandle);
+			meshCount++;
+		}//AddMesh
 
 		void RenderMeshes()
         {
@@ -142,5 +165,5 @@ namespace StereoKitApp
 				}
             }
         }//MeshUIs
-    }
+	}
 }
