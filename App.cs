@@ -42,10 +42,11 @@ namespace StereoKitApp
 		Pose MeshSelectorWindowPose = new Pose(0f, 0f, 0f, Quat.Identity);
 
 		// Mesh Lists
-		List<Mesh> meshList = new List<Mesh>();
-		List<Pose> meshPoses = new List<Pose>();
+		// ## Converted some of the lists to static only because the export functionality needs static var or objects change if needed
+		static List<Mesh> meshList = new List<Mesh>();
+		static List<Pose> meshPoses = new List<Pose>();
 		List<string> meshHandles = new List<string>();
-		List<int> meshType = new List<int>();
+		static List<int> meshType = new List<int>();
 		int meshCount = 0;
 
 		// Types of meshes
@@ -120,13 +121,12 @@ namespace StereoKitApp
 					};
 					if (UI.Button("Import Scene"))
 					{
-						resetMainUIParams();
 						isImportSc = true;
 					};
 					if (UI.Button("Export Scene"))
 					{
-						resetMainUIParams();
 						isExportSc = true;
+						Platform.FilePicker(PickerMode.Save, ExportData , null, ".txt");
 					};
 					if (UI.Button("Exit"))
 					{
@@ -459,6 +459,15 @@ namespace StereoKitApp
 			string handle = meshHandles[selectedMeshIndex];
 			string[] arr = { diameter, depth, subDiv, handle};
 			return arr;
+		}//getMeshDetails
+
+		static void ExportData(string file)
+        {
+			SceneTranfer ob = new SceneTranfer();
+			string x = ob.ExportMeshData(meshList, meshPoses, meshType);
+			Platform.WriteFile(file, x);
 		}
+
+		
 	}
 }
