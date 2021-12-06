@@ -32,6 +32,7 @@ namespace StereoKitApp
 		bool meshValueChanged = false;
 		int selectedMeshIndex;
 		bool beingEdited = false;
+		bool moreOptions = false;
 		String Lx, Ly, Lz;
 		String Rx, Ry, Rz;
 		String Sx, Sy, Sz;
@@ -242,6 +243,19 @@ namespace StereoKitApp
 			UI.Label("Z=");
 			UI.SameLine();
 			if (UI.Input("Sz", ref Sz, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+
+            if (!moreOptions)
+            {
+				if (UI.Button("More Options")) moreOptions = true;
+			}
+            if (moreOptions)
+            {
+				if(UI.Button("Delete Mesh"))
+                {
+					MeshDeleted();
+                }
+				if (UI.Button("Less Options")) moreOptions = false;
+            }
 			UI.WindowEnd();
         }
 
@@ -287,11 +301,20 @@ namespace StereoKitApp
 				/* Error will be thrown when user clears value in the input field and we catch that */
             }
 			
-		}
+		}//SetMeshTransform
 
 		void MeshTransformBeingEdited(string[] val)
         {
 			SetMeshTransform(val);
+        }//MeshTransfromBeingEdited
+
+		void MeshDeleted()
+        {
+			isMeshSelected = false;
+			meshList.RemoveAt(selectedMeshIndex);
+			meshHandles.RemoveAt(selectedMeshIndex);
+			meshPoses.RemoveAt(selectedMeshIndex);
+			meshCount--;
         }
 	}
 }
