@@ -3,6 +3,7 @@ using System.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 
 namespace StereoKitApp
 {
@@ -27,7 +28,14 @@ namespace StereoKitApp
 		bool isImportSc = false;
 		bool isExportSc = false;
 		// Mesh Controller
-		bool meshSelected = false;
+		bool isMeshSelected = false;
+		bool meshValueChanged = false;
+		int selectedMeshIndex;
+		bool beingEdited = false;
+		String Lx, Ly, Lz;
+		String Rx, Ry, Rz;
+		String Sx, Sy, Sz;
+		Pose MeshSelectorWindowPose = new Pose(0f, 0f, 0f, Quat.Identity);
 
 		// Mesh Lists
 		List<Mesh> meshList = new List<Mesh>();
@@ -64,6 +72,12 @@ namespace StereoKitApp
 			// Meshes
 			RenderMeshes();
 			MeshUIs();
+
+            // Mesh Manipulation
+            if (isMeshSelected)
+            {
+				MeshManipulationUI();
+            }
             
 		}//Step
 
@@ -161,9 +175,123 @@ namespace StereoKitApp
 				Pose meshPose = meshPoses[i];
 				if(UI.Handle(meshHandles[i], ref meshPose, meshList[i].Bounds))
                 {
+					isMeshSelected = true;
+					meshValueChanged = true;
+					selectedMeshIndex = i;
 					meshPoses[i] = meshPose;
 				}
             }
         }//MeshUIs
+
+		void MeshManipulationUI()
+        {
+            if (meshValueChanged) {
+				string[] val = GetMeshTransform();
+				Lx = val[0];
+				Ly = val[1];
+				Lz = val[2];
+				Rx = val[3];
+				Ry = val[4];
+				Rz = val[5];
+				Sx = val[6];
+				Sy = val[7];
+				Sz = val[8];
+			}
+			meshValueChanged = false;
+			string[] values = { Lx, Ly, Lz, Rx, Ry, Rz, Sx, Sy, Sz };
+			UI.WindowBegin("Mesh Manipulation", ref MeshSelectorWindowPose, new Vector2(50, 0) * U.cm);
+
+			UI.Label("Location: ");
+			UI.SameLine();
+			UI.Label("X=");
+			UI.SameLine();
+			if (UI.Input("Lx", ref Lx, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+			UI.SameLine();
+			UI.Label("Y=");
+			UI.SameLine();
+			if (UI.Input("Ly", ref Ly, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+			UI.SameLine();
+			UI.Label("Z=");
+			UI.SameLine();
+			if (UI.Input("Lz", ref Lz, new Vec2(0.1f,0f))) MeshTransformBeingEdited(values);
+
+			UI.Label("Rotation: ");
+			UI.SameLine();
+			UI.Label("X=");
+			UI.SameLine();
+			if (UI.Input("Rx", ref Rx, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+			UI.SameLine();
+			UI.Label("Y=");
+			UI.SameLine();
+			if (UI.Input("Ry", ref Ry, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+			UI.SameLine();
+			UI.Label("Z=");
+			UI.SameLine();
+			if (UI.Input("Rz", ref Rz, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+
+			UI.Label("Scale: ");
+			UI.SameLine();
+			UI.Label("X=");
+			UI.SameLine();
+			if (UI.Input("Sx", ref Sx, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+			UI.SameLine();
+			UI.Label("Y=");
+			UI.SameLine();
+			if (UI.Input("Sy", ref Sy, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+			UI.SameLine();
+			UI.Label("Z=");
+			UI.SameLine();
+			if (UI.Input("Sz", ref Sz, new Vec2(0.10f, 0f))) MeshTransformBeingEdited(values);
+			UI.WindowEnd();
+        }
+
+		string[] GetMeshTransform()
+        {
+			Pose selectedMeshPose = meshPoses[selectedMeshIndex];
+			Matrix transform = selectedMeshPose.ToMatrix();
+			string lx = transform.Translation.x.ToString();
+			string ly = transform.Translation.y.ToString();
+			string lz = transform.Translation.z.ToString();
+			string rx = transform.Rotation.x.ToString();
+			string ry = transform.Rotation.y.ToString();
+			string rz = transform.Rotation.z.ToString();
+			string sx = transform.Scale.x.ToString();
+			string sy = transform.Scale.y.ToString();
+			string sz = transform.Scale.z.ToString();
+			string[] ret = { lx, ly, lz, rx, ry, rz, sx, sy, sz };
+			return ret;
+		}
+
+		void SetMeshTransform(string[] val)
+        {
+            try
+            {
+				float lx = float.Parse(val[0], CultureInfo.InvariantCulture.NumberFormat);
+				float ly = float.Parse(val[1], CultureInfo.InvariantCulture.NumberFormat);
+				float lz = float.Parse(val[2], CultureInfo.InvariantCulture.NumberFormat);
+
+				float rx = float.Parse(val[3], CultureInfo.InvariantCulture.NumberFormat);
+				float ry = float.Parse(val[4], CultureInfo.InvariantCulture.NumberFormat);
+				float rz = float.Parse(val[5], CultureInfo.InvariantCulture.NumberFormat);
+
+				float sx = float.Parse(val[6], CultureInfo.InvariantCulture.NumberFormat);
+				float sy = float.Parse(val[7], CultureInfo.InvariantCulture.NumberFormat);
+				float sz = float.Parse(val[8], CultureInfo.InvariantCulture.NumberFormat);
+
+				Quaternion q = Quat.FromAngles(new Vec3(rx, ry, rz));
+				meshPoses[selectedMeshIndex] = new Pose(lx, ly, lz, q);
+			}
+            catch
+            {
+				// Nothing here
+				/* Error will be thrown when user clears value in the input field and we catch that */
+            }
+			
+		}
+
+		void MeshTransformBeingEdited(string[] val)
+        {
+			SetMeshTransform(val);
+        }
 	}
 }
