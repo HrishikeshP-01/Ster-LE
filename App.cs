@@ -38,7 +38,7 @@ namespace StereoKitApp
 		String Lx, Ly, Lz;
 		String Rx, Ry, Rz;
 		String Sx, Sy, Sz;
-		String dm, depth, subDiv;
+		String dm, depth, subDiv, selectedHandle;
 		Pose MeshSelectorWindowPose = new Pose(0f, 0f, 0f, Quat.Identity);
 
 		// Mesh Lists
@@ -56,7 +56,8 @@ namespace StereoKitApp
 			Cylinder = 3,
 			Plane = 4,
         }
-		string[] meshNames = { "Cube", "Sphere", "Cylinder", "Plane" };
+		string[] meshNames = { "None", "Cube", "Sphere", "Cylinder", "Plane" }; // None because type index starts at 1
+
 		public void Init()
 		{
 			// Create assets used by the app
@@ -141,26 +142,26 @@ namespace StereoKitApp
                 if (UI.Button("Cube"))
                 {
 					Mesh m = MeshGenerator((int)MeshTypeIndex.Cube, cubeSize: Vec3.One) ;
-					AddMesh(m);
 					meshType.Add((int)MeshTypeIndex.Cube);
+					AddMesh(m);
 				}
                 if (UI.Button("Sphere"))
                 {
 					Mesh m = MeshGenerator((int)MeshTypeIndex.Sphere, spDiameter: 1.0f);
-					AddMesh(m);
 					meshType.Add((int)MeshTypeIndex.Sphere);
+					AddMesh(m);
 				}
                 if (UI.Button("Cylinder"))
                 {
 					Mesh m = MeshGenerator((int)MeshTypeIndex.Cylinder, cyDiameter: 1.0f, cyDepth: 1.0f);
-					AddMesh(m);
 					meshType.Add((int)MeshTypeIndex.Cylinder);
+					AddMesh(m);
 				}
                 if (UI.Button("Plane"))
                 {
 					Mesh m = MeshGenerator((int)MeshTypeIndex.Plane, plSize: Vec2.One);
-					AddMesh(m);
 					meshType.Add((int)MeshTypeIndex.Plane);
+					AddMesh(m);
 				}
 				UI.WindowEnd();
 			}
@@ -191,7 +192,7 @@ namespace StereoKitApp
 			meshList.Add(m);
 			Pose mPose = new Pose(0, 0, -0.5f, Quat.Identity);
 			meshPoses.Add(mPose);
-			string mHandle = "Mesh" + meshCount.ToString();
+			string mHandle = meshNames[meshType[meshType.Count-1]] + "_ObNo_" +meshCount.ToString();
 			meshHandles.Add(mHandle);
 			meshCount++;
 		}//AddMesh
@@ -239,6 +240,8 @@ namespace StereoKitApp
 				dm = val[0];
 				depth = val[1];
 				subDiv = val[2];
+				selectedHandle = val[3];
+
 			}
 			meshValueChanged = false;
 			string[] values = { Lx, Ly, Lz, Rx, Ry, Rz, Sx, Sy, Sz };
@@ -246,6 +249,9 @@ namespace StereoKitApp
 
 			UI.WindowBegin("Mesh Manipulation", ref MeshSelectorWindowPose, new Vector2(50, 0) * U.cm);
 
+			UI.Label("Name:");
+			UI.SameLine();
+			UI.Label(selectedHandle);
 			UI.Label("Location: ");
 			UI.SameLine();
 			UI.Label("X=");
@@ -444,7 +450,8 @@ namespace StereoKitApp
 			string diameter = meshList[selectedMeshIndex].Bounds.dimensions.x.ToString();
 			string depth = meshList[selectedMeshIndex].Bounds.dimensions.z.ToString();
 			string subDiv = (meshList[selectedMeshIndex].GetVerts().Length / 4).ToString();
-			string[] arr = { diameter, depth, subDiv};
+			string handle = meshHandles[selectedMeshIndex];
+			string[] arr = { diameter, depth, subDiv, handle};
 			return arr;
 		}
 	}
