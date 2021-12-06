@@ -45,9 +45,9 @@ namespace StereoKitApp
 		// ## Converted some of the lists to static only because the export functionality needs static var or objects change if needed
 		static List<Mesh> meshList = new List<Mesh>();
 		static List<Pose> meshPoses = new List<Pose>();
-		List<string> meshHandles = new List<string>();
+		static List<string> meshHandles = new List<string>();
 		static List<int> meshType = new List<int>();
-		int meshCount = 0;
+		static int meshCount = 0;
 
 		// Types of meshes
 		enum MeshTypeIndex
@@ -57,7 +57,7 @@ namespace StereoKitApp
 			Cylinder = 3,
 			Plane = 4,
         }
-		string[] meshNames = { "None", "Cube", "Sphere", "Cylinder", "Plane" }; // None because type index starts at 1
+		static string[] meshNames = { "None", "Cube", "Sphere", "Cylinder", "Plane" }; // None because type index starts at 1
 
 		public void Init()
 		{
@@ -122,11 +122,12 @@ namespace StereoKitApp
 					if (UI.Button("Import Scene"))
 					{
 						isImportSc = true;
+						Platform.FilePicker(PickerMode.Open, ImportScene, null, ".txt");
 					};
 					if (UI.Button("Export Scene"))
 					{
 						isExportSc = true;
-						Platform.FilePicker(PickerMode.Save, ExportData , null, ".txt");
+						Platform.FilePicker(PickerMode.Save, ExportScene , null, ".txt");
 					};
 					if (UI.Button("Exit"))
 					{
@@ -172,7 +173,7 @@ namespace StereoKitApp
 			}
         }//UIDisplay
 
-		Mesh MeshGenerator(int ch, Vec3 cubeSize = default(Vec3), float spDiameter = 1.0f, 
+		static Mesh MeshGenerator(int ch, Vec3 cubeSize = default(Vec3), float spDiameter = 1.0f, 
 			float cyDiameter = 1.0f, float cyDepth = 1.0f, Vec2 plSize = default(Vec2), int  cySubDiv = 16, int cuSubDiv = 0, int spSubDiv = 4, int plSubDiv = 0) {
 			Mesh m = new Mesh();
 			switch (ch) {
@@ -192,7 +193,7 @@ namespace StereoKitApp
 			return m;
 		}
 
-		void AddMesh(Mesh m)
+		static void AddMesh(Mesh m)
         {
 			meshList.Add(m);
 			Pose mPose = new Pose(0, 0, -0.5f, Quat.Identity);
@@ -461,13 +462,56 @@ namespace StereoKitApp
 			return arr;
 		}//getMeshDetails
 
-		static void ExportData(string file)
+		static void ExportScene(string file)
         {
 			SceneTranfer ob = new SceneTranfer();
 			string x = ob.ExportMeshData(meshList, meshPoses, meshType);
 			Platform.WriteFile(file, x);
 		}
 
+		static void ImportScene(string file)
+        {
+			string data = Platform.ReadFileText(file ?? "");
+			string[] m_list = data.Split('\n');
+			for(int i = 0; i < m_list.Length; i++)
+            {
+                try
+                {
+					string m_data_sentence = m_list[i];
+					string[] m_data = m_data_sentence.Split(',');
+					// get mesh type & location
+					int type = int.Parse(m_data[0], CultureInfo.InvariantCulture.NumberFormat);
+					float lx = float.Parse(m_data[1], CultureInfo.InvariantCulture.NumberFormat);
+					float ly = float.Parse(m_data[2], CultureInfo.InvariantCulture.NumberFormat);
+					float lz = float.Parse(m_data[3], CultureInfo.InvariantCulture.NumberFormat);
+					// get mesh orientation
+					float rx = float.Parse(m_data[4], CultureInfo.InvariantCulture.NumberFormat);
+					float ry = float.Parse(m_data[5], CultureInfo.InvariantCulture.NumberFormat);
+					float rz = float.Parse(m_data[6], CultureInfo.InvariantCulture.NumberFormat);
+					float rw = float.Parse(m_data[7], CultureInfo.InvariantCulture.NumberFormat);
+					// get mesh details
+					float sx = float.Parse(m_data[8], CultureInfo.InvariantCulture.NumberFormat);
+					float sy = float.Parse(m_data[9], CultureInfo.InvariantCulture.NumberFormat);
+					float sz = float.Parse(m_data[10], CultureInfo.InvariantCulture.NumberFormat);
+					// get vertex count?
+
+					Mesh m = MeshGenerator(type, cubeSize: new Vec3(sx, sy, sz), spDiameter: sx, cyDiameter: sx,
+						cyDepth: sz, plSize: new Vec2(sx, sy));
+					meshList.Add(m);
+					meshType.Add(type);
+					Pose mPose = new Pose(lx, ly, lz, Quat.FromAngles(rx, ry, rz));
+					meshPoses.Add(mPose);
+					string mHandle = meshNames[meshType[meshType.Count - 1]] + "_ObNo_" + meshCount.ToString();
+					meshHandles.Add(mHandle);
+					meshCount++;
+				}
+                catch
+                {
+
+                }
+				
+			}
+        }
 		
 	}
 }
