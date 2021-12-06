@@ -163,6 +163,11 @@ namespace StereoKitApp
 					meshType.Add((int)MeshTypeIndex.Plane);
 					AddMesh(m);
 				}
+                if (UI.Button("Back"))
+                {
+					isPlaceOb = false;
+					isMainMenu = true;
+                }
 				UI.WindowEnd();
 			}
         }//UIDisplay
@@ -432,6 +437,7 @@ namespace StereoKitApp
 		void RenameMesh()
         {
 			meshHandles[selectedMeshIndex] = renameText;
+			selectedHandle = renameText;
 			renameMeshOption = false;
         }//RenameMesh
 
