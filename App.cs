@@ -33,6 +33,8 @@ namespace StereoKitApp
 		int selectedMeshIndex;
 		bool beingEdited = false;
 		bool moreOptions = false;
+		bool renameMeshOption = false;
+		string renameText;
 		String Lx, Ly, Lz;
 		String Rx, Ry, Rz;
 		String Sx, Sy, Sz;
@@ -127,7 +129,7 @@ namespace StereoKitApp
 				UI.WindowBegin("Place", ref ObjectWindowPose, new Vector2(24, 0) * U.cm);
                 if (UI.Button("Cube"))
                 {
-					Mesh m = Mesh.GenerateCube(Vec3.One*0.04f);
+					Mesh m = Mesh.GenerateCube(Vec3.One);
 					AddMesh(m);
 				}
                 if (UI.Button("Sphere"))
@@ -254,6 +256,23 @@ namespace StereoKitApp
                 {
 					MeshDeleted();
                 }
+				UI.SameLine();
+				if (UI.Button("Rename Mesh"))
+                {
+					renameMeshOption = true;
+					renameText = meshHandles[selectedMeshIndex];
+				}
+                if (renameMeshOption)
+                {
+					UI.Label("Name: ");
+					UI.SameLine();
+					UI.Input("Rename", ref renameText, new Vec2(0.3f, 0));
+					UI.SameLine();
+                    if (UI.Button("Done"))
+                    {
+						RenameMesh();
+                    }
+                }
 				if (UI.Button("Less Options")) moreOptions = false;
             }
 			UI.WindowEnd();
@@ -315,6 +334,12 @@ namespace StereoKitApp
 			meshHandles.RemoveAt(selectedMeshIndex);
 			meshPoses.RemoveAt(selectedMeshIndex);
 			meshCount--;
+        }//MeshDeleted
+
+		void RenameMesh()
+        {
+			meshHandles[selectedMeshIndex] = renameText;
+			renameMeshOption = false;
         }
 	}
 }
