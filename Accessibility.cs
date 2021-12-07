@@ -58,6 +58,7 @@ namespace StereoKitApp
 			}
 			UI.SameLine();
 			if (UI.Button("Normal"))
+            {
 				ColorizeFingers(16,
 					new Gradient(new GradientKey(new Color(1, 1, 1, 1), 1)),
 					new Gradient(
@@ -65,6 +66,7 @@ namespace StereoKitApp
 						new GradientKey(new Color(.6f, .6f, .6f, 0), 0.4f),
 						new GradientKey(new Color(.8f, .8f, .8f, 1), 0.55f),
 						new GradientKey(new Color(1, 1, 1, 1), 1)));
+			}
 		}
 	}
 }

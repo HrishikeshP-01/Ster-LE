@@ -15,8 +15,6 @@ namespace StereoKitApp
 			displayPreference = DisplayMode.MixedReality
 		};
 
-		Pose  cubePose = new Pose(0, 0, -0.5f, Quat.Identity);
-		Model cube;
 		Matrix4x4 floorTransform = Matrix.TS(new Vector3(0, -1.5f, 0), new Vector3(30, 0.1f, 30));
 		Material  floorMaterial;
 
@@ -40,7 +38,7 @@ namespace StereoKitApp
 		String Rx, Ry, Rz;
 		String Sx, Sy, Sz;
 		String dm, depth, subDiv, selectedHandle;
-		Pose MeshSelectorWindowPose = new Pose(0f, -0.5f, 0f, Quat.Identity);
+		Pose MeshSelectorWindowPose = new Pose(0, 0f, -0.5f, Quat.Identity);
 
 		// Mesh Lists
 		// ## Converted some of the lists to static only because the export functionality needs static var or objects change if needed
@@ -62,11 +60,6 @@ namespace StereoKitApp
 
 		public void Init()
 		{
-			// Create assets used by the app
-			cube = Model.FromMesh(
-				Mesh.GenerateRoundedCube(Vec3.One * 0.1f, 0.02f),
-				Default.MaterialUI);
-
 			floorMaterial = new Material(Shader.FromFile("floor.hlsl"));
 			floorMaterial.Transparency = Transparency.Blend;
 
@@ -79,9 +72,6 @@ namespace StereoKitApp
 		{
 			if (SK.System.displayType == Display.Opaque)
 				Default.MeshCube.Draw(floorMaterial, floorTransform);
-
-			UI.Handle("Cube", ref cubePose, cube.Bounds);
-			cube.Draw(cubePose.ToMatrix());
 
 			// Menu
 			UIDisplay();
@@ -149,19 +139,19 @@ namespace StereoKitApp
 				UI.WindowBegin("Place", ref ObjectWindowPose, new Vector2(24, 0) * U.cm);
                 if (UI.Button("Cube"))
                 {
-					Mesh m = MeshGenerator((int)MeshTypeIndex.Cube, cubeSize: Vec3.One) ;
+					Mesh m = MeshGenerator((int)MeshTypeIndex.Cube, cubeSize: new Vec3(0.1f, 0.1f, 0.1f)) ;
 					meshType.Add((int)MeshTypeIndex.Cube);
 					AddMesh(m);
 				}
                 if (UI.Button("Sphere"))
                 {
-					Mesh m = MeshGenerator((int)MeshTypeIndex.Sphere, spDiameter: 1.0f);
+					Mesh m = MeshGenerator((int)MeshTypeIndex.Sphere, spDiameter: 0.1f);
 					meshType.Add((int)MeshTypeIndex.Sphere);
 					AddMesh(m);
 				}
                 if (UI.Button("Cylinder"))
                 {
-					Mesh m = MeshGenerator((int)MeshTypeIndex.Cylinder, cyDiameter: 1.0f, cyDepth: 1.0f);
+					Mesh m = MeshGenerator((int)MeshTypeIndex.Cylinder, cyDiameter: 0.1f, cyDepth: 0.1f);
 					meshType.Add((int)MeshTypeIndex.Cylinder);
 					AddMesh(m);
 				}
@@ -332,6 +322,10 @@ namespace StereoKitApp
 					UI.Label("Diameter=");
 					UI.SameLine();
 					if (UI.Input("Dm", ref dm, new Vec2(0.10f, 0f))) MeshScaleChanged(detailValues);
+					UI.SameLine();
+					UI.Label("Depthr=");
+					UI.SameLine();
+					if (UI.Input("Dp", ref depth, new Vec2(0.10f, 0f))) MeshScaleChanged(detailValues);
 					break;
 				case (int)MeshTypeIndex.Plane:
 					UI.Label("X=");
