@@ -21,12 +21,13 @@ namespace StereoKitApp
 		Material  floorMaterial;
 
 		// Menu parameters
-		Pose ObjectWindowPose = new Pose(0f, 0f, 0f, Quat.Identity);
+		Pose ObjectWindowPose = new Pose(0, 0, -0.5f, Quat.Identity);
 		// Main Menu
 		bool isMainMenu = false;
 		bool isPlaceOb = false;
 		bool isImportSc = false;
 		bool isExportSc = false;
+		bool isSettingsSc = false;
 		// Mesh Controller
 		bool isMeshSelected = false;
 		bool meshValueChanged = false;
@@ -39,7 +40,7 @@ namespace StereoKitApp
 		String Rx, Ry, Rz;
 		String Sx, Sy, Sz;
 		String dm, depth, subDiv, selectedHandle;
-		Pose MeshSelectorWindowPose = new Pose(0f, 0f, 0f, Quat.Identity);
+		Pose MeshSelectorWindowPose = new Pose(0f, -0.5f, 0f, Quat.Identity);
 
 		// Mesh Lists
 		// ## Converted some of the lists to static only because the export functionality needs static var or objects change if needed
@@ -104,6 +105,7 @@ namespace StereoKitApp
 			isPlaceOb = false;
 			isImportSc = false;
 			isExportSc = false;
+			isSettingsSc = false;
         }//resetMainUIParams
 
 		void UIDisplay()
@@ -129,6 +131,11 @@ namespace StereoKitApp
 						isExportSc = true;
 						Platform.FilePicker(PickerMode.Save, ExportScene , null, ".txt");
 					};
+                    if (UI.Button("Settings"))
+                    {
+						resetMainUIParams();
+						isSettingsSc = true;
+                    }
 					if (UI.Button("Exit"))
 					{
 						SK.Quit();
@@ -167,6 +174,18 @@ namespace StereoKitApp
                 if (UI.Button("Back"))
                 {
 					isPlaceOb = false;
+					isMainMenu = true;
+                }
+				UI.WindowEnd();
+			}
+
+            if (isSettingsSc)
+            {
+				UI.WindowBegin("Settings", ref ObjectWindowPose, new Vector2(24, 0) * U.cm);
+				Accessibility.Step();
+                if (UI.Button("Back"))
+                {
+					resetMainUIParams();
 					isMainMenu = true;
                 }
 				UI.WindowEnd();
